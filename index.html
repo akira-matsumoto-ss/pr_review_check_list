@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>コードレビュー観点リスト</title>
+  <style>canvas {border: 1px solid black;}</style>
+</head>
+<body>
+  <div id="capture">
+    <div id="check_list"></div><br>
+    チェック率：<span id="check_score">0</span>％
+  </div>
+  <br><br>
+  <input type="button" value="スクショ" onclick="capture()">
+  <br><br>
+  画像<br>
+  <canvas id="captured_result"></canvas>
+  <script src="html2canvas.min.js"></script>
+  <script>
+    function capture() {
+      html2canvas(document.getElementById("capture")).then(canvas => {
+        canvas.id = "captured_result";
+        document.getElementById("captured_result").replaceWith(canvas);
+      });
+    }
+
+    const TOPICS = [
+      "Rubocop通過した",
+      "マイグレーションファイルに column_exists? や table_exists? を実装した (order/subs_order/order_item/payment/access_history)",
+      "新規のテーブルやクラス名の名前付けを誰かと相談した",
+      "データパッチの必要性",
+      "広告主管理画面の実装の必要性"
+    ];
+    const TOPICS_COUNT = TOPICS.length;
+
+    function percent(f) {
+      return 100 * f;
+    }
+
+    let _checkCount = {val: 0};
+    let checkScore = document.getElementById("check_score");
+    function onCheckCountChange(obj, prop, value) {
+      if (prop === "val") {
+        obj[prop] = value;
+        checkScore.textContent = percent(value / TOPICS_COUNT);
+      }
+      return true;
+    }
+    let checkCountHandler = {set: onCheckCountChange};
+    let checkCount = new Proxy(_checkCount, checkCountHandler);
+
+    function onCheckboxChange(e) {
+      if (e.currentTarget.checked) {
+        checkCount.val++;
+      } else {
+        checkCount.val--;
+      }
+    }
+
+    function div() {
+      return document.createElement("div");
+    }
+
+    function input() {
+      return document.createElement("input");
+    }
+
+    function checkBox(id) {
+      let e = input();
+      e.type = "checkbox";
+      e.id = id;
+      e.addEventListener("change", onCheckboxChange);
+      return e;
+    }
+
+    function text(str) {
+      return document.createTextNode(str);
+    }
+
+    function label(forId, str) {
+      let e = document.createElement("label");
+      e.htmlFor = forId;
+      e.append(text(str));
+      return e;
+    }
+
+    function br() {
+      return document.createElement("br");
+    }
+
+    function checkTopic(index, topic) {
+      checkBoxId = "checkbox_" + index;
+      let container = div();
+      container.append(checkBox(checkBoxId));
+      container.append(label(checkBoxId, topic));
+      container.append(br()); container.append(br());
+      return container;
+    }
+
+    let checkList = document.getElementById("check_list");
+    for(const [index, topic] of TOPICS.entries()) {
+      checkList.append(checkTopic(index, topic))
+    }
+  </script>
+</body>
+</html>
